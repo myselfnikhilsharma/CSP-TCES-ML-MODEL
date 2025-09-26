@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thermal System Estimator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #ffffff;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #f9f9f9;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 16px;
+      padding: 25px 20px;
+      box-shadow: 0 0 15px rgba(0, 128, 0, 0.15);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: #2e7d32;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    select, input {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+      color: #333;
+      font-size: 15px;
+    }
+
+    select:focus, input:focus {
+      border-color: #2e7d32;
+      outline: 2px solid #a5d6a7;
+    }
+
+    button {
+      padding: 12px;
+      background-color: #2e7d32;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1b5e20;
+    }
+
+    #prediction {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px 15px;
+      }
+
+      input, select, button {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Thermal Energy System Estimator</h2>
+    <form id="predictionForm">
+      <select name="model_choice" required>
+        <option value="" disabled selected>Select Prediction Type</option>
+        <option value="LCOE">LCOE (Levelized Cost of Energy)</option>
+        <option value="TES">ESC (Energy Storage Cost)</option>
+      </select>
+
+      <input type="number" name="f1" step="0.01" placeholder="Equilibrium Temperature (K)" required />
+      <input type="number" name="f2" step="0.01" placeholder="Heat of Reaction (kJ/mol)" required />
+      <input type="number" name="f3" step="0.01" placeholder="Specific Heat Capacity of A (kJ/kg-K)" required />
+      <input type="number" name="f4" step="0.01" placeholder="Specific Heat Capacity of B (kJ/kg-K)" required />
+      <input type="number" name="f5" step="0.01" placeholder="Density of A (g/cm³)" required />
+      <input type="number" name="f6" step="0.01" placeholder="Density of B (g/cm³)" required />
+      <input type="number" name="f7" step="0.01" placeholder="Price ($/MT)" required />
+      <input type="number" name="f8" step="0.01" placeholder="Stoichiometric Coeff. of C" required />
+      <input type="number" name="f9" step="0.01" placeholder="Molecular Weight of A (g/mol)" required />
+
+      <button type="submit">Estimate</button>
+    </form>
+    <div id="prediction"></div>
+  </div>
+
+  <script>
+    document.getElementById('predictionForm').addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      const formData = new FormData(event.target);
+      const params = new URLSearchParams();
+      formData.forEach((value, key) => params.append(key, value));
+
+      try {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params,
+        });
+
+        const result = await response.json();
+        document.getElementById('prediction').innerText =
+          result.prediction !== undefined
+            ? "Estimated Value: $" + result.prediction
+            : "Error: " + result.error;
+      } catch (err) {
+        document.getElementById('prediction').innerText = "Prediction failed. Try again.";
+      }
+    });
+  </script>
+</body>
+</html>
