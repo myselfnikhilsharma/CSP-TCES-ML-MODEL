@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify, send_from_directory
 import numpy as np
 import joblib
-from tflite_runtime.interpreter import Interpreter   # Lightweight TFLite runtime
-# import tensorflow as tf
-# Interpreter = tf.lite.Interpreter(model_path="your_model.tflite")
+# from tflite_runtime.interpreter import Interpreter   # Lightweight TFLite runtime
+import tensorflow as tf
+Interpreter = tf.lite.Interpreter(model_path="your_model.tflite")
 
 app = Flask(__name__, static_folder='')
 
