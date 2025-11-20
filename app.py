@@ -1,16 +1,17 @@
 from flask import Flask, request, jsonify, send_from_directory
 import numpy as np
 import joblib
-from tflite_runtime.interpreter import Interpreter   # Lightweight TFLite runtime
-# import tensorflow as tf
-# Interpreter = tf.lite.Interpreter(model_path="your_model.tflite")
+# from tflite_runtime.interpreter import Interpreter   # Lightweight TFLite runtime
+import tensorflow as tf
+# Interpreter = tf.lite.Interpreter()
 
 app = Flask(__name__, static_folder='')
 
 
 # Function to load model + scaler once
 def load_model_and_scaler(model_path, scaler_path):
-    interpreter = Interpreter(model_path=model_path)
+    interpreter = tf.lite.Interpreter(model_path=model_path)
+    # interpreter = Interpreter(model_path=model_path)
     interpreter.allocate_tensors()
     scaler = joblib.load(scaler_path)
 
