@@ -168,10 +168,13 @@
       letter-spacing: 0.5px;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       min-height: 300px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      will-change: transform;
     }
 
     .image-box:hover {
-      transform: translateY(-5px);
+      transform: translateY(-5px) translateZ(0);
       box-shadow: 0 12px 24px rgba(0,0,0,0.2);
     }
 
@@ -186,10 +189,13 @@
       line-height: 1.8;
       box-shadow: 0 8px 24px rgba(0,0,0,0.15);
       transition: all 0.3s ease;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      will-change: transform;
     }
 
     .info-box:hover {
-      transform: translateY(-3px);
+      transform: translateY(-3px) translateZ(0);
       box-shadow: 0 12px 30px rgba(0,0,0,0.2);
       border-color: rgba(76, 175, 80, 0.4);
     }
@@ -212,6 +218,12 @@
       border: 2px solid rgba(76, 175, 80, 0.15);
       box-shadow: 0 8px 30px rgba(0,0,0,0.18);
       animation: slideInRight 0.8s ease-out;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .right-column:hover {
+      box-shadow: 0 12px 36px rgba(0,0,0,0.22);
+      border-color: rgba(76, 175, 80, 0.3);
     }
 
     @keyframes slideInRight {
@@ -750,21 +762,21 @@
 
       </form>
 
+      <div id="prediction" style="margin-bottom:20px; display:none;"></div>
+
       <div id="resultsContainer" style="display:none;">
         <div class="results-box">
-          <h3 style="text-align: center; color: #1b5e20; margin-bottom: 25px; font-size: 22px;">Estimation Results</h3>
+          <h3 style="text-align: center; color: #1b5e20; margin-bottom: 25px; font-size: 22px; font-weight: 600;">🎯 Estimation Results</h3>
           <div class="result-item">
-            <div class="result-label">LCOE (Levelized Cost of Energy)</div>
+            <div class="result-label">💡 LCOE (Levelized Cost of Energy)</div>
             <div class="result-value" id="lcoeValue">--</div>
           </div>
           <div class="result-item">
-            <div class="result-label">ESC (Energy Storage Cost)</div>
+            <div class="result-label">⚡ ESC (Energy Storage Cost)</div>
             <div class="result-value" id="escValue">--</div>
           </div>
         </div>
       </div>
-
-      <div id="prediction" style="margin-bottom:20px;"></div>
     </div>
 
   </div>
@@ -808,6 +820,7 @@
     clearBtn.addEventListener("click", () => {
       form.reset();
       output.textContent = "";
+      output.style.display = 'none';
       submitBtn.disabled = true;
       progressBar.style.display = 'none';
       resultsContainer.style.display = 'none';
@@ -828,6 +841,7 @@
 
       output.textContent = "Estimating...";
       output.className = "loading";
+      output.style.display = 'block';
       resultsContainer.style.display = 'none';
 
       const formData = new FormData(form);
@@ -856,6 +870,7 @@
 
         if (result.predictions) {
           output.textContent = "";
+          output.style.display = 'none';
           
           // Get LCOE value
           const overallLcoeValue = result.predictions["LCOE"] || result.predictions["Overall LCOE"] || 0;
@@ -874,18 +889,21 @@
           } else {
             output.textContent = "No results available";
             output.className = "error";
+            output.style.display = 'block';
           }
 
         } else {
           console.error('Invalid response format:', result);
           output.textContent = "Error: " + (result.error || 'Unexpected response format');
           output.className = "error";
+          output.style.display = 'block';
         }
 
       } catch (err) {
         console.error('Fetch or parse error:', err);
         output.textContent = "Prediction failed: " + err.message;
         output.className = "error";
+        output.style.display = 'block';
         resultsContainer.style.display = 'none';
         progressBar.style.display = 'none';
         submitBtn.classList.remove('loading');
