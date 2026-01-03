@@ -1,75 +1,83 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory 
 import numpy as np
 import joblib
-# from tflite_runtime.interpreter import Interpreter   # Lightweight TFLite runtime
 import tensorflow as tf
-# Interpreter = tf.lite.Interpreter()
 
 app = Flask(__name__, static_folder='')
 
+# ========================================
+# LCOE MODEL
+# ========================================
+print("Loading LCOE model...")
+lcoe_interpreter = tf.lite.Interpreter(model_path="TRAINED MODEL FOR LCOE.tflite")
+lcoe_interpreter.allocate_tensors()
+lcoe_scaler = joblib.load("SCALER FOR LCOE.save")
+lcoe_input_details = lcoe_interpreter.get_input_details()
+lcoe_output_details = lcoe_interpreter.get_output_details()
+print("LCOE model loaded successfully")
 
-# Function to load model + scaler once
-def load_model_and_scaler(model_path, scaler_path):
-    interpreter = tf.lite.Interpreter(model_path=model_path)
-    # interpreter = Interpreter(model_path=model_path)
-    interpreter.allocate_tensors()
-    scaler = joblib.load(scaler_path)
-
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
-
-    return interpreter, scaler, input_details, output_details
-
-
-# Load both models at startup
-interpreter_lcoe, scaler_lcoe, in_lcoe, out_lcoe = load_model_and_scaler(
-    "TRAINED MODEL FOR LCOE.tflite", "SCALER FOR LCOE.save"
-)
-
-interpreter_tes, scaler_tes, in_tes, out_tes = load_model_and_scaler(
-    "TRAINED MODEL FOR ESC.tflite", "SCALER FOR ESC.save"
-)
-
+# ========================================
+# ESC MODEL
+# ========================================
+print("Loading ESC model...")
+esc_interpreter = tf.lite.Interpreter(model_path="TRAINED MODEL FOR ESC.tflite")
+esc_interpreter.allocate_tensors()
+esc_scaler = joblib.load("SCALER FOR ESC.save")
+esc_input_details = esc_interpreter.get_input_details()
+esc_output_details = esc_interpreter.get_output_details()
+print("ESC model loaded successfully")
 
 @app.route('/')
 def index():
-    return send_from_directory('', 'ui.html')
-
+    return send_from_directory('', 'UI.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        model_choice = request.form['model_choice']  # "LCOE" or "TES"
+        # Get 9 features from the form
+        features = []
+        for i in range(9):
+            raw = request.form.get(f'f{i+1}', "")
+            cleaned = raw.replace(",", "").strip()
+            try:
+                value = float(cleaned)
+                features.append(value)
+            except ValueError:
+                return jsonify({
+                    'error': f"Invalid number in input f{i+1}: '{raw}'"
+                }), 400
 
-        # Collect features
-        features = [float(request.form[f'f{i+1}']) for i in range(9)]
         input_array = np.array([features], dtype=np.float32)
+        
+        # LCOE prediction
+        input_scaled_lcoe = lcoe_scaler.transform(input_array).astype(np.float32)
+        lcoe_interpreter.set_tensor(lcoe_input_details[0]['index'], input_scaled_lcoe)
+        lcoe_interpreter.invoke()
+        lcoe_pred = lcoe_interpreter.get_tensor(lcoe_output_details[0]['index'])[0][0]
+        lcoe_value = round(float(lcoe_pred), 4)
 
-        # Pick correct model
-        if model_choice == 'LCOE':
-            interpreter, scaler, input_details, output_details = (
-                interpreter_lcoe, scaler_lcoe, in_lcoe, out_lcoe
-            )
-        elif model_choice == 'TES':
-            interpreter, scaler, input_details, output_details = (
-                interpreter_tes, scaler_tes, in_tes, out_tes
-            )
-        else:
-            return jsonify({'error': 'Invalid model choice'}), 400
+        # ESC prediction
+        input_scaled_esc = esc_scaler.transform(input_array).astype(np.float32)
+        esc_interpreter.set_tensor(esc_input_details[0]['index'], input_scaled_esc)
+        esc_interpreter.invoke()
+        esc_pred = esc_interpreter.get_tensor(esc_output_details[0]['index'])[0][0]
+        esc_value = round(float(esc_pred), 4)
 
-        # Scale input
-        input_scaled = scaler.transform(input_array).astype(np.float32)
-
-        # Run TFLite inference
-        interpreter.set_tensor(input_details[0]['index'], input_scaled)
-        interpreter.invoke()
-        prediction = interpreter.get_tensor(output_details[0]['index'])[0][0]
-
-        return jsonify({'prediction': round(float(prediction), 2)})
+        return jsonify({
+            'predictions': {'LCOE': lcoe_value},
+            'esc': [esc_value],
+            'esc_model_names': ['ESC']
+        })
 
     except Exception as e:
+        import traceback
+        print("Error in prediction:")
+        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    import os
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port, debug=False)
+
