@@ -52,14 +52,13 @@
       color: #fff;
       padding: 28px 20px;
       text-align: center;
-      position: sticky;
+      position: fixed;
       top: 0;
       width: 100%;
       z-index: 50;
       box-shadow: 0 4px 20px rgba(0,0,0,0.25), 0 2px 10px rgba(76, 175, 80, 0.3);
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
-      position: relative;
     }
 
     .header-bar::after {
@@ -122,6 +121,7 @@
       display: flex;
       gap: 25px;
       padding: 40px 30px 50px;
+      margin-top: 140px;
       flex: 1;
       animation: fadeIn 1s ease-out;
       position: relative;
@@ -152,9 +152,9 @@
       flex: 0 0 auto;
       height: 400px;
       background-image: url("CST.png");
-      background-size: 85%;
+      background-size: contain;
       background-repeat: no-repeat;
-      background-position: center bottom;
+      background-position: center;
       border-radius: 12px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.15);
       background-color: #fff;
@@ -162,11 +162,12 @@
       align-items: flex-start;
       justify-content: center;
       padding: 20px 15px 15px 15px;
-      font-size: 24px;
+      font-size: 1.5rem;
       font-weight: 600;
       color: #136027;
       letter-spacing: 0.5px;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      min-height: 300px;
     }
 
     .image-box:hover {
@@ -678,16 +679,27 @@
 
     <!-- LEFT -->
     <div class="left-column">
-      <div class="image-box">CSP System</div>
+      <div class="image-box"></div>
 
       <div class="info-box">
         <p>
-          A typical concentrated solar thermal (CSP) with thermochemical energy storage (TES) system comprises:
+          <b>About This Tool</b><br><br>
+          This machine learning application predicts the optimal <b>Levelized Cost of Electricity (LCOE)</b> and <b>Energy Storage Cost (ESC)</b> for concentrated solar power plants with thermochemical energy storage.
           <br><br>
-          • <b>Solar Collectors</b><br>
-          • <b>High-Temperature Receivers</b><br>
-          • <b>Thermochemical Energy Storage Reactors</b><br>
-          • <b>Power Conversion Cycle</b><br>
+          <b>CSP-TES System Consists of:</b><br>
+          • Solar Collectors<br>
+          • High-Temperature Receivers<br>
+          • Thermochemical Energy Storage Reactors<br>
+          • Power Conversion Cycle<br>
+          <br>
+          The model is trained on data from a stochastic programming-based optimization model that considers seasonal solar variability, material properties, and techno-economic constraints for a 100 MW CSP-TES plant.
+          <br><br>
+
+          <b>Key Features:</b><br>
+          • Instant predictions (seconds vs hours of optimization)<br>
+          • Considers 9 material properties<br>
+          • Based on redox reaction: MOₓ ⇌ MOᵧ + ν O₂<br>
+          • Open-loop configuration with s-CO₂ Brayton cycle
         </p>
       </div>
     </div>
@@ -706,25 +718,25 @@
         <label>Heat of Reaction (kJ/mol) <span class="info-icon" data-tooltip="Enthalpy change of the TES redox reaction per mole of reactant (endothermic in charging, exothermic in discharging).">i</span></label>
         <input type="text" id="f2" name="f2" placeholder="Enter value (e.g., 178.5)" required />
 
-        <label>Specific Heat Capacity of A (kJ/kg-K) <span class="info-icon" data-tooltip="Average specific heat of solid MOₓ (reactant) over the operating temperature range.">i</span></label>
+        <label>Specific Heat Capacity of MOₓ (kJ/kg-K) <span class="info-icon" data-tooltip="Average specific heat of solid MOₓ (reactant) over the operating temperature range.">i</span></label>
         <input type="text" id="f3" name="f3" placeholder="Enter value (e.g., 1.25)" required />
 
-        <label>Specific Heat Capacity of B (kJ/kg-K) <span class="info-icon" data-tooltip="Average specific heat of solid MOᵧ (product) over the operating temperature range.">i</span></label>
+        <label>Specific Heat Capacity of MOᵧ (kJ/kg-K) <span class="info-icon" data-tooltip="Average specific heat of solid MOᵧ (product) over the operating temperature range.">i</span></label>
         <input type="text" id="f4" name="f4" placeholder="Enter value (e.g., 1.05)" required />
 
-        <label>Density of A (g/cm³) <span class="info-icon" data-tooltip="Density of solid MOₓ (reactant) at operating conditions.">i</span></label>
+        <label>Density of MOₓ (g/cm³) <span class="info-icon" data-tooltip="Density of solid MOₓ (reactant) at operating conditions.">i</span></label>
         <input type="text" id="f5" name="f5" placeholder="Enter value (e.g., 3.58)" required />
 
-        <label>Density of B (g/cm³) <span class="info-icon" data-tooltip="Density of solid MOᵧ (product).">i</span></label>
+        <label>Density of MOᵧ (g/cm³) <span class="info-icon" data-tooltip="Density of solid MOᵧ (product).">i</span></label>
         <input type="text" id="f6" name="f6" placeholder="Enter value (e.g., 2.71)" required />
 
         <label>Price ($/MT) <span class="info-icon" data-tooltip="Material price of the redox pair per metric ton (feedstock cost).">i</span></label>
         <input type="text" id="f7" name="f7" placeholder="Enter value (e.g., 450.00)" required />
 
-        <label>Stoichiometric Coefficient of C <span class="info-icon" data-tooltip="Stoichiometric coefficient ν = (x–y)/2 in the redox pair MOₓ ⇌ MOᵧ + ν O₂.">i</span></label>
+        <label>Stoichiometric Coefficient of O₂ <span class="info-icon" data-tooltip="Stoichiometric coefficient ν = (x–y)/2 in the redox pair MOₓ ⇌ MOᵧ + ν O₂.">i</span></label>
         <input type="text" id="f8" name="f8" placeholder="Enter value (e.g., 3.0)" required />
 
-        <label>Molecular Weight of A (g/mol) <span class="info-icon" data-tooltip="Molecular weight of the solid MOₓ (reactant).">i</span></label>
+        <label>Molecular Weight of MOₓ (g/mol) <span class="info-icon" data-tooltip="Molecular weight of the solid MOₓ (reactant).">i</span></label>
         <input type="text" id="f9" name="f9" placeholder="Enter value (e.g., 100.09)" required />
 
         <div class="actions">

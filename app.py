@@ -3,7 +3,7 @@ import numpy as np
 import joblib
 import tensorflow as tf
 
-app = Flask(__name__, static_folder='')
+app = Flask(__name__, static_folder='', static_url_path='')
 
 # ========================================
 # LCOE MODEL
@@ -29,7 +29,11 @@ print("ESC model loaded successfully")
 
 @app.route('/')
 def index():
-    return send_from_directory('', 'UI.html')
+    return send_from_directory('.', 'UI.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory('.', path)
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -78,6 +82,6 @@ def predict():
 
 if __name__ == '__main__':
     import os
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
 
